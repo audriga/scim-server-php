@@ -1,0 +1,22 @@
+{
+  "id": "urn:audriga:params:scim:schemas:extension:provisioning:2.0:User",
+  "name": "ProvisioningUser",
+  "description": "Provisioning User",
+  "attributes": [
+    {
+      "name": "sizeQuota",
+      "type": "int",
+      "multiValued": false,
+      "description": "Size quota assigned to a user, in bytes",
+      "required": false,
+      "caseExact": false,
+      "mutability": "readWrite",
+      "returned": "default",
+      "uniqueness": "none"
+    }
+  ],
+  "meta": {
+    "resourceType": "Schema",
+    "location": "/v2/Schemas/urn:audriga:params:scim:schemas:extension:provisioning:2.0:User"
+  }
+}

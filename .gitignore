@@ -1,0 +1,6 @@
+/vendor/
+/logs/
+*.sqlite
+*.cache
+/config/config.php
+/.idea/

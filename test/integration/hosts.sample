@@ -1,0 +1,2 @@
+[scim_php_servers]
+container_scim_php users_address=http://<insert-path-here>/Users user=testuser pass=testpass

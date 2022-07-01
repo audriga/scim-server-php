@@ -1,0 +1,597 @@
+{
+	"info": {
+		"_postman_id": "2b79327d-70c4-425f-942f-6037f38d67e5",
+		"name": "PFA SCIM PHP Collection",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "JWT",
+			"item": [
+				{
+					"name": "Get JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"pm.environment.set(\"jwt_token\", response.Bearer)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/jwt",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jwt"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ResourceTypes",
+			"item": [
+				{
+					"name": "Read all ResourceTypes",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json().Resources).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains exactly one entry\", () => {",
+									"    pm.expect(pm.response.json().Resources.length).to.eql(1);",
+									"});",
+									"",
+									"pm.test(\"Response body contains ResourceType with id \\\"User\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[0].id).to.eql(\"User\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/ResourceTypes",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ResourceTypes"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Schemas",
+			"item": [
+				{
+					"name": "Read all Schemas",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json().Resources).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains exactly four entries\", () => {",
+									"    pm.expect(pm.response.json().Resources.length).to.eql(4);",
+									"});",
+									"",
+									"pm.test(\"Response body contains Schema with id \\\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[0].id).to.eql(\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:ResourceType\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[1].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:ResourceType\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:User\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[2].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:User\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:Schema\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[3].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:Schema\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/Schemas",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Schemas"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "ServiceProviderConfigs",
+			"item": [
+				{
+					"name": "Read all ServiceProviderConfigs",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains a ServiceProviderConfig with a correct schema\", () => {",
+									"    pm.expect(pm.response.json().schemas).to.include(\"urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/ServiceProviderConfig",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"ServiceProviderConfig"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
+		{
+			"name": "Users",
+			"item": [
+				{
+					"name": "Create a single user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 201\", () => {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with userName \\\"createdtestuser@test.org\\\"\", () => {",
+									"    pm.expect(pm.response.json().userName).to.eql(\"createdtestuser@test.org\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains a valid non-null user ID (the ID of the user which was created)\", () => {",
+									"    pm.expect(pm.response.json().id).to.not.be.null;",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with sizeQuota equal to 12345\", () => {",
+									"    pm.expect(pm.response.json()[\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\"].sizeQuota).to.eql(12345);",
+									"});",
+									"",
+									"pm.collectionVariables.set(\"testUserId\", pm.response.json().id);"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/scim+json",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"userName\": \"createdtestuser@test.org\",\n    \"id\": \"createdtestuser@test.org\",\n    \"active\": true,\n    \"password\": \"somepass123\",\n    \"displayName\": \"createdtestuser\",\n    \"emails\": [{\"value\":\"createdtestuser@test.org\"}],\n    \"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\": {\n        \"sizeQuota\": 12345\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/Users",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read a single user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains the user ID of the user we want to read\", () => {",
+									"    pm.expect(pm.response.json().id).to.eql(\"createdtestuser@test.org\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with userName \\\"createdtestuser@test.org\\\"\", () => {",
+									"    pm.expect(pm.response.json().userName).to.eql(\"createdtestuser@test.org\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with sizeQuota equal to 12345\", () => {",
+									"    pm.expect(pm.response.json()[\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\"].sizeQuota).to.eql(12345);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/Users/{{testUserId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users",
+								"{{testUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read a non-existent user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 404\", () => {",
+									"    pm.response.to.have.status(404);",
+									"});",
+									"",
+									"pm.test(\"Response body is empty\", () => {",
+									"    pm.expect(pm.response.body).to.be.undefined;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/Users/some-non-existent-user@test.org",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users",
+								"some-non-existent-user@test.org"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Read all users",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json().Resources).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with userName \\\"createdtestuser@test.org\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[0].userName).to.eql(\"createdtestuser@test.org\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with sizeQuota equal to 12345\", () => {",
+									"    pm.expect(pm.response.json().Resources[0][\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\"].sizeQuota).to.eql(12345);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/Users",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Update a single user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains the user ID of the user we want to read\", () => {",
+									"    pm.expect(pm.response.json().id).to.eql(pm.collectionVariables.get('testUserId'));",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with displayName \\\"updatedtestuser\\\"\", () => {",
+									"    pm.expect(pm.response.json().displayName).to.eql(\"updatedtestuser\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with sizeQuota equal to 123456789\", () => {",
+									"    pm.expect(pm.response.json()[\"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\"].sizeQuota).to.eql(123456789);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/scim+json",
+								"type": "default"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"id\": \"createdtestuser@test.org\",\n    \"displayName\": \"updatedtestuser\",\n    \"urn:audriga:params:scim:schemas:extension:provisioning:2.0:User\": {\n        \"sizeQuota\": 123456789\n    }\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{url}}/Users/{{testUserId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users",
+								"{{testUserId}}"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Delete a single user",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 204\", () => {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "DELETE",
+						"header": [
+							{
+								"key": "Content-Type",
+								"value": "application/scim+json",
+								"type": "default"
+							},
+							{
+								"key": "Authorization",
+								"value": "Bearer: {{jwt_token}}",
+								"type": "default"
+							}
+						],
+						"url": {
+							"raw": "{{url}}/Users/{{testUserId}}",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users",
+								"{{testUserId}}"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		}
+	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
+	"event": [
+		{
+			"listen": "prerequest",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		},
+		{
+			"listen": "test",
+			"script": {
+				"type": "text/javascript",
+				"exec": [
+					""
+				]
+			}
+		}
+	],
+	"variable": [
+		{
+			"key": "testUserId",
+			"value": ""
+		},
+		{
+			"key": "testGroupId",
+			"value": ""
+		}
+	]
+}

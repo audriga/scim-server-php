@@ -1,0 +1,12 @@
+<phpunit
+    bootstrap="../vendor/autoload.php"
+    colors="true"
+    cacheResultFile=".phpunit.result.cache"
+    convertNoticesToExceptions="false"
+    convertWarningsToExceptions="false">
+    <testsuites>
+        <testsuite name="Unit">
+            <directory>unit</directory>
+        </testsuite>
+    </testsuites>
+</phpunit>

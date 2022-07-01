@@ -1,0 +1,5 @@
+# Ansible integration tests
+---
+- import_playbook: users.yml
+  tags:
+    users

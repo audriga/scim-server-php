@@ -1,0 +1,31 @@
+{
+    "name": "audriga/scim-opf",
+    "description": "An open provisioning framework using the SCIM protocol",
+    "type": "library",
+    "require": {
+        "slim/slim": "^4.10",
+        "illuminate/database": "^8.83",
+        "php": "^7.4",
+        "slim/php-view": "^3.1",
+        "monolog/monolog": "^2.4",
+        "tuupola/slim-jwt-auth": "^3.6",
+        "ramsey/uuid": "^4.2",
+        "slim/psr7": "^1.5",
+        "php-di/php-di": "^6.3"
+    },
+    "autoload": {
+        "psr-4": {
+            "Opf\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Stanimir Bozhilov",
+            "email": "stanimir@audriga.com"
+        }
+    ],
+    "require-dev": {
+        "phpunit/phpunit": "^9.5",
+        "squizlabs/php_codesniffer": "^3.6"
+    }
+}

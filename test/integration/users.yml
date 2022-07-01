@@ -1,0 +1,51 @@
+# Tests /Users SCIM endpoint
+---
+- hosts: all
+  ignore_errors: true
+  gather_facts: false
+  tasks:
+    - name: Create test folder
+      ansible.builtin.file:
+        dest: "/tmp/opf_ansible_output/{{ inventory_hostname }}"
+        state: directory
+        mode: '0755'
+      delegate_to: 127.0.0.1
+
+    - name: Get all users
+      uri:
+        url: "{{ users_address }}"
+        method: GET
+        return_content: true
+        validate_certs: false
+      delegate_to: 127.0.0.1
+      register: call_response
+
+    - name: Store reply under /tmp/
+      copy:
+        content: "{{ call_response.content }}"
+        dest: "/tmp/opf_ansible_output/{{ inventory_hostname }}/\
+              get_all_users.json"
+      delegate_to: 127.0.0.1
+
+- hosts: all
+  ignore_errors: true
+  gather_facts: false
+  tasks:
+    - name: Create a user
+      uri:
+        body: '{"userName":"testuser","externalId":"testuserexternal","profileUrl":"https://www.example.com/testuser"}'
+        body_format: json
+        url: "{{ users_address }}"
+        method: POST
+        status_code: 201 # Expect 201 for a create user response
+        return_content: true
+        validate_certs: false
+      delegate_to: 127.0.0.1
+      register: call_response
+
+    - name: Store reply under /tmp/
+      copy:
+        content: "{{ call_response.content }}"
+        dest: "/tmp/opf_ansible_output/{{ inventory_hostname }}/\
+              create_user.json"
+      delegate_to: 127.0.0.1
