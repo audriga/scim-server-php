@@ -21,25 +21,17 @@ final class ListUsersAction extends Controller
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
         $this->logger->info("GET Users");
+        $filter = '';
         if (!empty($request->getQueryParams()['filter'])) {
             $this->logger->info("Filter --> " . $request->getQueryParams()['filter']);
+            $filter = $request->getQueryParams()['filter'];
         }
         $uri = $request->getUri();
         $baseUrl = sprintf('%s://%s', $uri->getScheme(), $uri->getAuthority() . $this->basePath);
 
         $userName = null;
         $users = [];
-        if (!empty($request->getQueryParams('filter'))) {
-            $userName = Util::getUserNameFromFilter($request->getQueryParams()['filter']);
-            if (!empty($userName)) {
-                $user = $this->repository->getOneByUserName();
-                if (isset($user) && !empty($user)) {
-                    $users[] = $user;
-                }
-            }
-        } else {
-            $users = $this->repository->getAll();
-        }
+        $users = $this->repository->getAll($filter);
 
         $scimUsers = [];
         if (!empty($users)) {

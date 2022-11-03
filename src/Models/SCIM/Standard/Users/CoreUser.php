@@ -299,19 +299,38 @@ class CoreUser extends CommonEntity
         $this->setUserName(isset($data['userName']) ? $data['userName'] : null);
 
         $name = new Name();
-        $name->setFamilyName($data['name']['familyName']);
-        $name->setFormatted($data['name']['formatted']);
-        $name->setGivenName($data['name']['givenName']);
-        $name->setHonorificPrefix($data['name']['honorificPrefix']);
-        $name->setHonorificSuffix($data['name']['honorificSuffix']);
+        if (isset($data['name']) && !empty($data['name'])) {
+            if (isset($data['name']['familyName']) && !empty($data['name']['familyName'])) {
+                $name->setFamilyName($data['name']['familyName']);
+            }
+
+            if (isset($data['name']['formatted']) && !empty($data['name']['formatted'])) {
+                $name->setFormatted($data['name']['formatted']);
+            }
+
+            if (isset($data['name']['givenName']) && !empty($data['name']['givenName'])) {
+                $name->setGivenName($data['name']['givenName']);
+            }
+
+            if (isset($data['name']['honorificPrefix']) && !empty($data['name']['honorificPrefix'])) {
+                $name->setHonorificPrefix($data['name']['honorificPrefix']);
+            }
+
+            if (isset($data['name']['honorificSuffix']) && !empty($data['name']['honorificSuffix'])) {
+                $name->setHonorificSuffix($data['name']['honorificSuffix']);
+            }
+        }
         $this->setName($name);
 
         $meta = new Meta();
-        if (isset($data['meta']) && isset($data['meta']['created'])) {
+        // This is currently commented out, since the code complains about wrongly
+        // formatted timestamps sometimes when fromSCIM is called
+        // TODO: Need to possibly refactor string2datetime and/or dateTime2string in order to fix this
+        /*if (isset($data['meta']) && isset($data['meta']['created'])) {
             $meta->setCreated(Util::string2dateTime($data['meta']['created']));
         } else {
             $meta->setCreated(Util::dateTime2string(new \DateTime('NOW')));
-        }
+        }*/
         $this->setMeta($meta);
 
         $this->setActive(isset($data['active']) ? $data['active'] : true);
@@ -377,7 +396,7 @@ class CoreUser extends CommonEntity
             'preferredLanguage' => $this->getPreferredLanguage(),
             'locale' => $this->getLocale(),
             'timezone' => $this->getTimezone(),
-            'active' => $this->getActive(),
+            'active' => boolval($this->getActive()),
             'password' => $this->getPassword(),
             'emails' => $this->getEmails(),
             'phoneNumbers' => $this->getPhoneNumbers(),

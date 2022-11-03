@@ -1,0 +1,88 @@
+{
+    "id": "urn:ietf:params:scim:schema:audriga:core:2.0:Domain",
+    "name": "Domain",
+    "description": "Domain",
+    "attributes": [
+        {
+            "name": "domainName",
+            "type": "string",
+            "multiValued": false,
+            "description": "The name of the domain. REQUIRED.",
+            "required": true,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "server"
+        },
+        {
+            "name": "description",
+            "type": "string",
+            "multiValued": false,
+            "description": "A description of the domain. OPTIONAL.",
+            "required": false,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "none"
+        },
+        {
+            "name": "maxAliases",
+            "type": "int",
+            "multiValued": false,
+            "description": "The maximum number of aliases of the domain. OPTIONAL.",
+            "required": false,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "none"
+        },
+        {
+            "name": "maxMailboxes",
+            "type": "int",
+            "multiValued": false,
+            "description": "The maximum number of mailboxes the domain can have. OPTIONAL.",
+            "required": false,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "none"
+        },
+        {
+            "name": "maxQuota",
+            "type": "int",
+            "multiValued": false,
+            "description": "The maximum quota, allowed for mailboxes of the domain (in MB). OPTIONAL.",
+            "required": false,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "none"
+        },
+        {
+            "name": "usedQuota",
+            "type": "int",
+            "multiValued": false,
+            "description": "The currently used quota by the mailboxes of the domain (in MB). OPTIONAL.",
+            "required": false,
+            "caseExact": false,
+            "mutability": "readOnly",
+            "returned": "default",
+            "uniqueness": "none"
+        },
+        {
+            "name": "active",
+            "type": "bool",
+            "multiValued": false,
+            "description": "A flag indicating whether the domain is currently active. REQUIRED.",
+            "required": true,
+            "caseExact": false,
+            "mutability": "readWrite",
+            "returned": "default",
+            "uniqueness": "none"
+        }
+    ],
+    "meta": {
+        "resourceType": "Schema",
+        "location": "/v2/Schemas/urn:ietf:params:scim:schema:audriga:core:2.0:Domain"
+    }
+}

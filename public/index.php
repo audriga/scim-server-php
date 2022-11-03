@@ -1,78 +1,26 @@
 <?php
 
-use DI\ContainerBuilder;
-use Opf\Handlers\HttpErrorHandler;
-use Opf\Util\Util;
-use Slim\Factory\AppFactory;
+use Opf\ScimServer;
 
-require dirname(__DIR__) . '/vendor/autoload.php';
-session_start();
+require __DIR__ . '/../vendor/autoload.php';
 
-// Instantiate the PHP-DI ContainerBuilder
-$containerBuilder = new ContainerBuilder();
+// Obtain the root of the project
+$scimServerPhpRoot = dirname(__DIR__);
 
-$config = Util::getConfigFile();
-if ($config['isInProduction']) {
-    $containerBuilder->enableCompilation(__DIR__ . '/../var/cache');
-}
+// Create a new ScimServer instance and give it the project root
+$scimServer = new ScimServer($scimServerPhpRoot);
 
-// Set up a few Slim-related settings
-$settings = [
-    'settings' => [
-        'determineRouteBeforeAppMiddleware' => false,
-        'displayErrorDetails' => true, // set to false in production
-        'addContentLengthHeader' => false, // Allow the web server to send the content-length header
-    ]
-];
-$containerBuilder->addDefinitions($settings);
+// Take the config file path and pass it to the scimServer instance
+$configFilePath = __DIR__ . '/../config/config.php';
+$scimServer->setConfig($configFilePath);
 
-// Set up common dependencies
-$dependencies = require dirname(__DIR__) . '/src/Dependencies/dependencies.php';
-$dependencies($containerBuilder);
+// Obtain custom dependencies (if any) and pass them to the scimServer instance
+$dependencies = require __DIR__ . '/../src/Dependencies/mock-dependencies.php';
+$scimServer->setDependencies($dependencies);
 
-// Set up system-specific dependencies
-$dependencies = require dirname(__DIR__) . '/src/Dependencies/mock-dependencies.php';
-$dependencies($containerBuilder);
+// Set the Authentication Middleware configured in the dependencies files above to the scimServer instance
+//$scimServerPhpAuthMiddleware = 'AuthMiddleware';
+//$scimServer->setMiddleware(array($scimServerPhpAuthMiddleware));
 
-// Build PHP-DI Container instance
-$container = $containerBuilder->build();
-
-// Instantiate the app
-AppFactory::setContainer($container);
-$app = AppFactory::create();
-$callableResolver = $app->getCallableResolver();
-$responseFactory = $app->getResponseFactory();
-
-// Set our app's base path if it's configured
-if (isset($config['basePath']) && !empty($config['basePath'])) {
-    $app->setBasePath($config['basePath']);
-}
-
-// Set up the ORM
-$eloquent = require dirname(__DIR__) . '/src/eloquent.php';
-$eloquent($app);
-
-// Register routes
-$routes = require dirname(__DIR__) . '/src/routes.php';
-$routes($app);
-
-// Add Routing Middleware
-$app->addRoutingMiddleware();
-$app->addBodyParsingMiddleware();
-
-// Add JWT middleware
-$app->addMiddleware($container->get(JwtAuthentication::class));
-
-// Instantiate our custom Http error handler that we need further down below
-$errorHandler = new HttpErrorHandler($callableResolver, $responseFactory);
-
-// Add error middleware
-$errorMiddleware = $app->addErrorMiddleware(
-    $config['isInProduction'] ? false : true,
-    true,
-    true
-);
-$errorMiddleware->setDefaultErrorHandler($errorHandler);
-
-// Run app
-$app->run();
+// Start the scimServer
+$scimServer->run();

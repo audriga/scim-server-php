@@ -15,37 +15,15 @@ final class ListSchemasAction extends Controller
     {
         $this->logger->info("GET Schemas");
 
-        $config = Util::getConfigFile();
-        $supportedSchemas = $config['supportedResourceTypes'];
-        $mandatorySchemas = ['Schema', 'ResourceType'];
+        $scimSchemas = Util::getSchemas();
 
-        $scimSchemas = [];
-
-        // We store the schemas that the SCIM server supports in separate JSON files
-        // That's why we try to read them here and add them to $scimSchemas, which
-        // in turn is then put into the SCIM response body
-        $pathToSchemasDir = dirname(__DIR__, 3) . '/config/Schema';
-        $schemaFiles = scandir($pathToSchemasDir, SCANDIR_SORT_NONE);
-
-        // If scandir() failed (i.e., it returned false), then return 404 (is this spec-compliant?)
-        if ($schemaFiles === false) {
+        // If there were no schemas found, return 404
+        if (is_null($scimSchemas)) {
             $this->logger->info("No Schemas found");
             $response = new Response($status = 404);
             $response = $response->withHeader('Content-Type', 'application/scim+json');
 
             return $response;
-        }
-
-        foreach ($schemaFiles as $schemaFile) {
-            if (!in_array($schemaFile, array('.', '..'))) {
-                $scimSchemaJsonDecoded = json_decode(file_get_contents($pathToSchemasDir . '/' . $schemaFile), true);
-
-                // Only return schemas that are either mandatory (like the 'Schema' and 'ResourceType' ones)
-                // or supported by the server
-                if (in_array($scimSchemaJsonDecoded['name'], array_merge($supportedSchemas, $mandatorySchemas))) {
-                    $scimSchemas[] = $scimSchemaJsonDecoded;
-                }
-            }
         }
 
         $scimSchemasCollection = (new CoreCollection($scimSchemas))->toSCIM(false);

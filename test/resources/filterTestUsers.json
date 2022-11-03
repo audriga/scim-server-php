@@ -1,0 +1,19 @@
+[
+    {
+        "userName": "testuser",
+        "profileUrl": "http://example.com/testuser"
+    },
+    {
+        "userName": "testuser2",
+        "externalId": "testuser2external",
+        "name": {
+            "givenName": "given",
+            "familyName": "family"
+        }
+    },
+    {
+        "userName": "testuser3",
+        "externalId": "testuser3external",
+        "profileUrl": "http://example.com/testuser3"
+    }
+]

@@ -1,11 +1,15 @@
 <?php
 
+use Opf\Controllers\Domains\CreateDomainAction;
+use Opf\Controllers\Domains\DeleteDomainAction;
+use Opf\Controllers\Domains\GetDomainAction;
+use Opf\Controllers\Domains\ListDomainsAction;
+use Opf\Controllers\Domains\UpdateDomainAction;
 use Opf\Controllers\Groups\CreateGroupAction;
 use Opf\Controllers\Groups\DeleteGroupAction;
 use Opf\Controllers\Groups\GetGroupAction;
 use Opf\Controllers\Groups\ListGroupsAction;
 use Opf\Controllers\Groups\UpdateGroupAction;
-use Opf\Controllers\JWT\GenerateJWTAction;
 use Opf\Controllers\ServiceProviders\ListResourceTypesAction;
 use Opf\Controllers\ServiceProviders\ListSchemasAction;
 use Opf\Controllers\ServiceProviders\ListServiceProviderConfigurationsAction;
@@ -41,6 +45,14 @@ return function (App $app) {
         $app->delete('/Groups/{id}', DeleteGroupAction::class)->setName('groups.delete');
     }
 
+    if (in_array('Domain', $supportedResourceTypes)) {
+        $app->get('/Domains', ListDomainsAction::class)->setName('domains.list');
+        $app->get('/Domains/{id}', GetDomainAction::class)->setName('domains.get');
+        $app->post('/Domains', CreateDomainAction::class)->setName('domains.create');
+        $app->put('/Domains/{id}', UpdateDomainAction::class)->setName('domains.update');
+        $app->delete('/Domains/{id}', DeleteDomainAction::class)->setName('domains.delete');
+    }
+
     // ServiceProvider routes
     $app->get('/ResourceTypes', ListResourceTypesAction::class)->setName('resourceTypes.list');
     $app->get('/Schemas', ListSchemasAction::class)->setName('schemas.list');
@@ -48,7 +60,4 @@ return function (App $app) {
         '/ServiceProviderConfig',
         ListServiceProviderConfigurationsAction::class
     )->setName('serviceProviderConfigs.list');
-
-    // JWT
-    $app->get('/jwt', GenerateJWTAction::class)->setName('jwt.generate');
 };

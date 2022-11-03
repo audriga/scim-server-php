@@ -3,76 +3,69 @@
 namespace Opf\Adapters\Groups;
 
 use Opf\Adapters\AbstractAdapter;
-use Opf\DataAccess\Groups\MockGroupDataAccess;
+use Opf\Models\Mock\MockGroup;
+use Opf\Models\SCIM\Standard\Groups\CoreGroup;
+use Opf\Models\SCIM\Standard\Meta;
+use Opf\Models\SCIM\Standard\MultiValuedAttribute;
 
 class MockGroupAdapter extends AbstractAdapter
 {
-    /** @var Opf\Models\MockGroup $group */
-    private $group;
-
-    public function getGroup()
+    public function getCoreGroup(?MockGroup $mockGroup): ?CoreGroup
     {
-        return $this->group;
-    }
-
-    public function setGroup(MockGroupDataAccess $group)
-    {
-        $this->group = $group;
-    }
-
-    public function getId()
-    {
-        if (isset($this->group->id) && !empty($this->group->id)) {
-            return $this->group->id;
+        if (!isset($mockGroup)) {
+            return null;
         }
+
+        $coreGroup = new CoreGroup();
+        $coreGroup->setId($mockGroup->getId());
+
+        $coreGroupMeta = new Meta();
+        $coreGroupMeta->setResourceType("Group");
+        $coreGroupMeta->setCreated($mockGroup->getCreatedAt());
+        $coreGroupMeta->setLastModified($mockGroup->getUpdatedAt());
+        $coreGroup->setMeta($coreGroupMeta);
+
+        $coreGroup->setDisplayName($mockGroup->getDisplayName());
+
+        if ($mockGroup->getMembers() !== null && !empty($mockGroup->getMembers())) {
+            $coreGroupMembers = [];
+            foreach ($mockGroup->getMembers() as $mockGroupMember) {
+                $coreGroupMember = new MultiValuedAttribute();
+                $coreGroupMember->setValue($mockGroupMember);
+                $coreGroupMembers[] = $coreGroupMember;
+            }
+
+            $coreGroup->setMembers($coreGroupMembers);
+        }
+
+        return $coreGroup;
     }
 
-    public function setId($id)
+    public function getMockGroup(?CoreGroup $coreGroup): ?MockGroup
     {
-        if (isset($id) && !empty($id)) {
-            $this->group->id = $id;
+        if (!isset($coreGroup)) {
+            return null;
         }
-    }
 
-    public function getCreatedAt()
-    {
-        if (isset($this->group->created_at) && !empty($this->group->created_at)) {
-            return $this->group->created_at;
-        }
-    }
+        $mockGroup = new MockGroup();
+        $mockGroup->setId($coreGroup->getId());
 
-    public function setCreatedAt($createdAt)
-    {
-        if (isset($createdAt) && !empty($createdAt)) {
-            $this->group->created_at = $createdAt;
+        if ($coreGroup->getMeta() !== null) {
+            $mockGroup->setCreatedAt($coreGroup->getMeta()->getCreated());
+            $mockGroup->setUpdatedAt($coreGroup->getMeta()->getLastModified());
         }
-    }
 
-    public function getDisplayName()
-    {
-        if (isset($this->group->displayName) && !empty($this->group->displayName)) {
-            return $this->group->displayName;
-        }
-    }
+        $mockGroup->setDisplayName($coreGroup->getDisplayName());
 
-    public function setDisplayName($displayName)
-    {
-        if (isset($displayName) && !empty($displayName)) {
-            $this->group->displayName = $displayName;
-        }
-    }
+        if ($coreGroup->getMembers() !== null && !empty($coreGroup->getMembers())) {
+            $mockGroupMembers = [];
+            foreach ($coreGroup->getMembers() as $coreGroupMember) {
+                $mockGroupMembers[] = $coreGroupMember->getValue();
+            }
 
-    public function getMembers()
-    {
-        if (isset($this->group->members) && !empty($this->group->members)) {
-            return $this->group->members;
+            $mockGroup->setMembers($mockGroupMembers);
         }
-    }
 
-    public function setMembers($members)
-    {
-        if (isset($members) && !empty($members)) {
-            $this->group->members = $members;
-        }
+        return $mockGroup;
     }
 }

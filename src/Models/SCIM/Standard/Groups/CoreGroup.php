@@ -5,6 +5,7 @@ namespace Opf\Models\SCIM\Standard\Groups;
 use Opf\Util\Util;
 use Opf\Models\SCIM\Standard\CommonEntity;
 use Opf\Models\SCIM\Standard\Meta;
+use Opf\Models\SCIM\Standard\MultiValuedAttribute;
 
 class CoreGroup extends CommonEntity
 {
@@ -47,14 +48,27 @@ class CoreGroup extends CommonEntity
         $this->setDisplayName(isset($data['displayName']) ? $data['displayName'] : null);
 
         $meta = new Meta();
-        if (isset($data['meta']) && isset($data['meta']['created'])) {
+        // This is currently commented out, since the code complains about wrongly
+        // formatted timestamps sometimes when fromSCIM is called
+        // TODO: Need to possibly refactor string2datetime and/or dateTime2string in order to fix this
+        /*if (isset($data['meta']) && isset($data['meta']['created'])) {
             $meta->setCreated(Util::string2dateTime($data['meta']['created']));
         } else {
             $meta->setCreated(Util::dateTime2string(new \DateTime('NOW')));
-        }
+        }*/
         $this->setMeta($meta);
 
-        $this->setMembers(isset($data['members']) ? $data['members'] : true);
+        if (isset($data['members'])) {
+            $members = [];
+            foreach ($data['members'] as $member) {
+                $scimMember = new MultiValuedAttribute();
+                $scimMember->setValue($member);
+                $members[] = $scimMember;
+            }
+            $this->setMembers($members);
+        } else {
+            $this->setMembers(null);
+        }
 
         $this->setExternalId(isset($data['externalId']) ? $data['externalId'] : null);
     }
@@ -65,17 +79,18 @@ class CoreGroup extends CommonEntity
             'schemas' => [Util::GROUP_SCHEMA],
             'id' => $this->getId(),
             'externalId' => $this->getExternalId(),
-            'meta' => [
-                'resourceType' => $this->getMeta()->getResourceType(),
-                'created' => $this->getMeta()->getCreated(),
+            'meta' => null !== $this->getMeta() ? [
+                'resourceType' => null !== $this->getMeta()->getResourceType()
+                    ? $this->getMeta()->getResourceType() : null,
+                'created' => null !== $this->getMeta()->getCreated() ? $this->getMeta()->getCreated() : null,
                 'location' => $baseLocation . '/Groups/' . $this->getId(),
-                'version' => $this->getMeta()->getVersion()
-            ],
+                'version' => null !== $this->getMeta()->getVersion() ? $this->getMeta()->getVersion() : null
+            ] : null,
             'displayName' => $this->getDisplayName(),
             'members' => $this->getMembers()
         ];
 
-        if (null !== $this->getMeta()->getLastModified()) {
+        if (null !== $this->getMeta() && null !== $this->getMeta()->getLastModified()) {
             $data['meta']['updated'] = $this->getMeta()->getLastModified();
         }
 

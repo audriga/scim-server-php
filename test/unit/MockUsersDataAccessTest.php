@@ -4,88 +4,49 @@ namespace Opf\Test\Unit;
 
 use PHPUnit\Framework\TestCase;
 use Illuminate\Database\Capsule\Manager;
+use Opf\Adapters\Users\MockUserAdapter;
 use Opf\DataAccess\Users\MockUserDataAccess;
+use Opf\Models\SCIM\Standard\Users\CoreUser;
+use Opf\Util\Util;
 use SQLite3;
 
 final class MockUsersDataAccessTest extends TestCase
 {
-    /** @var SQLite3 */
-    protected $database = null;
+    /** @var Opf\Models\SCIM\Standard\Users\CoreUser */
+    protected $coreUser = null;
 
-    /** @var array */
-    protected $dbSettings = null;
-
-    /** @var Illuminate\Database\Capsule\Manager */
-    protected $capsule = null;
-
-    /** @var Opf\Models\MockUser */
+    /** @var Opf\DataAccess\Users\MockUserDataAccess */
     protected $mockUserDataAccess = null;
+
+    /** @var Opf\Adapters\Users\MockUserAdapter */
+    protected $mockUserAdapter = null;
 
     public function setUp(): void
     {
-        $this->database = new SQLite3(__DIR__ . '/../resources/test-scim-opf.sqlite');
-
-        $userDbSql = "CREATE TABLE IF NOT EXISTS users (
-            id varchar(160) NOT NULL UNIQUE,
-            userName varchar(160) NOT NULL,
-            active BOOLEAN NOT NULL DEFAULT 1,
-            externalId varchar(160) NULL,
-            profileUrl varchar(160) NULL,
-            created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-            updated_at DATETIME NULL
-        )";
-
-        $this->database->exec($userDbSql);
-
-        $createUserSql = "INSERT INTO users (
-            id,
-            userName,
-            externalId,
-            profileUrl
-            ) VALUES (
-            '12345678-9012-3456-7890-12345678',
-            'testuser',
-            'testuserexternal',
-            'https://example.com/testuser'
-        )";
-
-        $this->database->exec($createUserSql);
-
-        $this->dbSettings = [
-            'driver' => 'sqlite',
-            'database' => __DIR__ . '/../resources/test-scim-opf.sqlite',
-            'prefix' => ''
-        ];
-
-        $this->capsule = new Manager();
-        $this->capsule->addConnection($this->dbSettings);
-        $this->capsule->setAsGlobal();
-        $this->capsule->bootEloquent();
-
+        Util::setConfigFile(__DIR__ . '/../resources/mock-test-config.php');
+        $this->coreUser = new CoreUser();
         $this->mockUserDataAccess = new MockUserDataAccess();
+        $this->mockUserAdapter = new MockUserAdapter();
     }
 
     public function tearDown(): void
     {
+        $this->coreUser = null;
         $this->mockUserDataAccess = null;
-        $this->capsule = null;
-        $this->dbSettings = null;
-        $this->database->exec("DROP TABLE users");
-        $this->database = null;
-
-        unlink(__DIR__ . '/../resources/test-scim-opf.sqlite');
-    }
-
-    public function testReadAllUsers()
-    {
-        $this->assertNotEmpty($this->mockUserDataAccess->all());
+        $this->mockUserAdapter = null;
     }
 
     public function testCreateUser()
     {
         $testUserJson = json_decode(file_get_contents(__DIR__ . '/../resources/testUser.json'), true);
-        $this->mockUserDataAccess->fromSCIM($testUserJson);
-        $userCreateRes = $this->mockUserDataAccess->save();
-        $this->assertTrue($userCreateRes);
+        $this->coreUser->fromSCIM($testUserJson);
+        $mockUser = $this->mockUserAdapter->getMockUser($this->coreUser);
+        $userCreateRes = $this->mockUserDataAccess->create($mockUser);
+        $this->assertNotNull($userCreateRes);
+    }
+
+    public function testReadAllUsers()
+    {
+        $this->assertNotEmpty($this->mockUserDataAccess->getAll());
     }
 }

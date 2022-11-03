@@ -2,190 +2,120 @@
 
 namespace Opf\Repositories\Users;
 
+use Monolog\Logger;
 use Opf\Models\SCIM\Standard\Users\CoreUser;
 use Opf\Models\SCIM\Standard\Meta;
 use Opf\Repositories\Repository;
+use Opf\Util\Filters\FilterUtil;
 use Psr\Container\ContainerInterface;
 
 class MockUsersRepository extends Repository
 {
+    private $logger;
+
     public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
         $this->dataAccess = $this->container->get('UsersDataAccess');
         $this->adapter = $this->container->get('UsersAdapter');
+        $this->logger = $this->container->get(Logger::class);
     }
-    public function getAll(): array
-    {
+
+    public function getAll(
+        $filter = '',
+        $startIndex = 0,
+        $count = 0,
+        $attributes = [],
+        $excludedAttributes = []
+    ): array {
         // Read all mock users from the database
-        $mockUsers = $this->dataAccess::all();
+        $mockUsers = $this->dataAccess->getAll();
         $scimUsers = [];
 
-        // Transform each mock user to a SCIM user via the injected adapter
         foreach ($mockUsers as $mockUser) {
-            // TODO: Possibly refactor the transformation logic between SCIM users and other users
-            // in a separate method or class, since it seems to be rather repetitive
-            $this->adapter->setUser($mockUser);
-
-            $scimUser = new CoreUser();
-            $scimUser->setId($this->adapter->getId());
-            $scimUser->setUserName($this->adapter->getUserName());
-
-            $scimUserMeta = new Meta();
-            $scimUserMeta->setCreated($this->adapter->getCreatedAt());
-
-            $scimUser->setMeta($scimUserMeta);
-            $scimUser->setActive($this->adapter->getActive());
-            $scimUser->setExternalId($this->adapter->getExternalId());
-            $scimUser->setProfileUrl($this->adapter->getProfileUrl());
-
+            $scimUser = $this->adapter->getCoreUser($mockUser);
             $scimUsers[] = $scimUser;
+        }
+
+        if (isset($filter) && !empty($filter)) {
+            $scimUsersToFilter = [];
+            foreach ($scimUsers as $scimUser) {
+                $scimUsersToFilter[] = $scimUser->toSCIM(false);
+            }
+
+            $filteredScimData = FilterUtil::performFiltering($filter, $scimUsersToFilter);
+
+            $scimUsers = [];
+            foreach ($filteredScimData as $filteredScimUser) {
+                $scimUser = new CoreUser();
+                $scimUser->fromSCIM($filteredScimUser);
+                $scimUsers[] = $scimUser;
+            }
+
+            return $scimUsers;
         }
 
         return $scimUsers;
     }
 
-    public function getOneByUserName(string $userName): ?CoreUser
-    {
-        if (isset($userName) && !empty($userName)) {
-            // Try to find the first user from the database with the supplied username
-            $mockUser = $this->dataAccess::where('userName', $userName)->first();
+    public function getOneById(
+        string $id,
+        $filter = '',
+        $startIndex = 0,
+        $count = 0,
+        $attributes = [],
+        $excludedAttributes = []
+    ): ?CoreUser {
+        $mockUser = $this->dataAccess->getOneById($id);
+        $scimUser = $this->adapter->getCoreUser($mockUser);
 
-            // If such a user exists, map it to a SCIM user and return the SCIM user
-            if (isset($mockUser) && !empty($mockUser)) {
-                $this->adapter->setUser($mockUser);
+        if (isset($filter) && !empty($filter)) {
+            // Pass the single user as an array of an array, representing the user
+            $scimUsersToFilter = array($scimUser->toSCIM(false));
+            $filteredScimData = FilterUtil::performFiltering($filter, $scimUsersToFilter);
 
+            if (!empty($filteredScimData)) {
                 $scimUser = new CoreUser();
-                $scimUser->setId($this->adapter->getId());
-                $scimUser->setUserName($this->adapter->getUserName());
-
-                $scimUserMeta = new Meta();
-                $scimUserMeta->setCreated($this->adapter->getCreatedAt());
-
-                $scimUser->setMeta($scimUserMeta);
-                $scimUser->setActive($this->adapter->getActive());
-                $scimUser->setExternalId($this->adapter->getExternalId());
-                $scimUser->setProfileUrl($this->adapter->getProfileUrl());
-
+                $scimUser->fromSCIM($filteredScimData[0]);
                 return $scimUser;
-            } else {
-                return null;
             }
         }
-    }
 
-    public function getOneById(string $id): ?CoreUser
-    {
-        if (isset($id) && !empty($id)) {
-            // Try to find a user from the database with the supplied ID
-            $mockUser = $this->dataAccess::find($id);
-
-            // If there's such a user, transform it to a SCIM user and return the SCIM user
-            if (isset($mockUser) && !empty($mockUser)) {
-                $this->adapter->setUser($mockUser);
-
-                $scimUser = new CoreUser();
-                $scimUser->setId($this->adapter->getId());
-                $scimUser->setUserName($this->adapter->getUserName());
-
-                $scimUserMeta = new Meta();
-                $scimUserMeta->setCreated($this->adapter->getCreatedAt());
-
-                $scimUser->setMeta($scimUserMeta);
-                $scimUser->setActive($this->adapter->getActive());
-                $scimUser->setExternalId($this->adapter->getExternalId());
-                $scimUser->setProfileUrl($this->adapter->getProfileUrl());
-
-                return $scimUser;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
+        return $scimUser;
     }
 
     public function create($object): ?CoreUser
     {
-        if (isset($object) && !empty($object)) {
-            // Transform the incoming JSON user object to a SCIM object
-            // Then transform the SCIM object to a mock user that can be stored in the database
-            $scimUser = new CoreUser();
-            $scimUser->fromSCIM($object);
+        $scimUserToCreate = new CoreUser();
+        $scimUserToCreate->fromSCIM($object);
 
-            // $this->dataAccess represents an instance of the MockUser ORM model
-            // that we use for user storage to and retrieval from SQLite
-            $this->adapter->setUser($this->dataAccess);
+        $mockUserToCreate = $this->adapter->getMockUser($scimUserToCreate);
 
-            $this->adapter->setId($scimUser->getId());
-            $this->adapter->setUserName($scimUser->getUserName());
-            $this->adapter->setCreatedAt($scimUser->getMeta()->getCreated());
-            $this->adapter->setActive($scimUser->getActive());
-            $this->adapter->setExternalId($scimUser->getExternalId());
-            $this->adapter->setProfileUrl($scimUser->getProfileUrl());
+        $mockUserCreated = $this->dataAccess->create($mockUserToCreate);
 
-            // Obtain the transformed mock user from the adapter and try to save it to the database
-            $this->dataAccess = $this->adapter->getUser();
-            if ($this->dataAccess->save()) {
-                return $scimUser;
-            } else {
-                return null;
-            }
+        if (isset($mockUserCreated)) {
+            return $this->adapter->getCoreUser($mockUserCreated);
         }
+        return null;
     }
 
     public function update(string $id, $object): ?CoreUser
     {
-        if (isset($id) && !empty($id)) {
-            // Try to find the user with the supplied ID
-            $mockUser = $this->dataAccess::find($id);
-            if (isset($mockUser) && !empty($mockUser)) {
-                // Transform the received JSON user object to a SCIM object
-                $scimUser = new CoreUser();
-                $scimUser->fromSCIM($object);
+        $scimUserToUpdate = new CoreUser();
+        $scimUserToUpdate->fromSCIM($object);
 
-                // Set the adapter's internal user object to the found user from the database
-                $this->adapter->setUser($mockUser);
+        $mockUserToUpdate = $this->adapter->getMockUser($scimUserToUpdate);
 
-                // Set the SCIM user's ID to be the same as the ID of the found user from the database
-                // Otherwise, we might lose the ID if a new one is supplied in the request
-                $scimUser->setId($this->adapter->getId());
+        $mockUserUpdated = $this->dataAccess->update($id, $mockUserToUpdate);
 
-                // Transform the SCIM object to a mock user via the adapter and replace
-                // any properties of the mock user with the new properties incoming via the SCIM object
-                $this->adapter->setUserName($scimUser->getUserName());
-                $this->adapter->setCreatedAt($scimUser->getMeta()->getCreated());
-                $this->adapter->setActive($scimUser->getActive());
-                $this->adapter->setExternalId($scimUser->getExternalId());
-                $this->adapter->setProfileUrl($scimUser->getProfileUrl());
-
-                // Obtain the updated mock user via the adapter and try to save it to the database
-                $mockUser = $this->adapter->getUser();
-                if ($mockUser->save()) {
-                    return $scimUser;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
+        if (isset($mockUserUpdated)) {
+            return $this->adapter->getCoreUser($mockUserUpdated);
         }
+        return null;
     }
 
     public function delete(string $id): bool
     {
-        if (isset($id) && !empty($id)) {
-            // Try to find the user to be deleted
-            $mockUser = $this->dataAccess::find($id);
-            if (!isset($mockUser) || empty($mockUser)) {
-                return false;
-            }
-            $mockUser->delete();
-            return true;
-        } else {
-            return false;
-        }
+        return $this->dataAccess->delete($id);
     }
 }

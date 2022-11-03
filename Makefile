@@ -33,12 +33,7 @@ lint:
 
 .PHONY: api_test
 api_test:
-# If we pass the PFA_API_TEST variable with value 1, we can run the PFA API tests
-ifeq ($(PFA_API_TEST),1)
-	newman run test/postman/scim-opf-pfa.postman_collection.json -e test/postman/scim-env.postman_environment.json
-else
 	newman run test/postman/scim-opf.postman_collection.json -e test/postman/scim-env.postman_environment.json
-endif
 
 .PHONY: unit_test
 unit_test:

@@ -3,104 +3,54 @@
 namespace Opf\Adapters\Users;
 
 use Opf\Adapters\AbstractAdapter;
-use Opf\DataAccess\Users\MockUserDataAccess;
+use Opf\Models\Mock\MockUser;
+use Opf\Models\SCIM\Standard\Meta;
+use Opf\Models\SCIM\Standard\Users\CoreUser;
 
 class MockUserAdapter extends AbstractAdapter
 {
-    /** @var Opf\Models\MockUser $user */
-    private $user;
-
-    public function getUser()
+    public function getCoreUser(?MockUser $mockUser): ?CoreUser
     {
-        return $this->user;
-    }
-
-    public function setUser(MockUserDataAccess $user)
-    {
-        $this->user = $user;
-    }
-
-    public function getId()
-    {
-        if (isset($this->user->id) && !empty($this->user->id)) {
-            return $this->user->id;
+        if (!isset($mockUser)) {
+            return null;
         }
+
+        $coreUser = new CoreUser();
+        $coreUser->setId($mockUser->getId());
+        $coreUser->setExternalId($mockUser->getExternalId());
+
+        $coreUserMeta = new Meta();
+        $coreUserMeta->setResourceType("User");
+        $coreUserMeta->setCreated($mockUser->getCreatedAt());
+        $coreUserMeta->setLastModified($mockUser->getUpdatedAt());
+        $coreUser->setMeta($coreUserMeta);
+
+        $coreUser->setUserName($mockUser->getUserName());
+        $coreUser->setActive(boolval($mockUser->getActive()));
+        $coreUser->setProfileUrl($mockUser->getProfileUrl());
+
+        return $coreUser;
     }
 
-    public function setId($id)
+    public function getMockUser(?CoreUser $coreUser): ?MockUser
     {
-        if (isset($id) && !empty($id)) {
-            $this->user->id = $id;
+        if (!isset($coreUser)) {
+            return null;
         }
-    }
 
-    public function getUserName()
-    {
-        if (isset($this->user->userName) && !empty($this->user->userName)) {
-            return $this->user->userName;
-        }
-    }
+        $mockUser = new MockUser();
+        $mockUser->setId($coreUser->getId());
 
-    public function setUserName($userName)
-    {
-        if (isset($userName) && !empty($userName)) {
-            $this->user->userName = $userName;
+        if ($coreUser->getMeta() !== null) {
+            $mockUser->setCreatedAt($coreUser->getMeta()->getCreated());
+            $mockUser->setUpdatedAt($coreUser->getMeta()->getLastModified());
         }
-    }
 
-    public function getCreatedAt()
-    {
-        if (isset($this->user->created_at) && !empty($this->user->created_at)) {
-            return $this->user->created_at;
-        }
-    }
+        $mockUser->setUserName($coreUser->getUserName());
+        $mockUser->setActive(boolval($coreUser->getActive()));
+        $mockUser->setExternalId($coreUser->getExternalId());
+        $mockUser->setProfileUrl($coreUser->getProfileUrl());
 
-    public function setCreatedAt($createdAt)
-    {
-        if (isset($createdAt) && !empty($createdAt)) {
-            $this->user->created_at = $createdAt;
-        }
-    }
-
-    public function getActive()
-    {
-        if (isset($this->user->active) && !empty($this->user->active)) {
-            return boolval($this->user->active);
-        }
-    }
-
-    public function setActive($active)
-    {
-        if (isset($active) && !empty($active)) {
-            $this->user->active = $active;
-        }
-    }
-
-    public function getExternalId()
-    {
-        if (isset($this->user->externalId) && !empty($this->user->externalId)) {
-            return $this->user->externalId;
-        }
-    }
-
-    public function setExternalId($externalId)
-    {
-        if (isset($externalId) && !empty($externalId)) {
-            $this->user->externalId = $externalId;
-        }
-    }
-
-    public function getProfileUrl()
-    {
-        if (isset($this->user->profileUrl) && !empty($this->user->profileUrl)) {
-            return $this->user->profileUrl;
-        }
-    }
-
-    public function setProfileUrl($profileUrl)
-    {
-        if (isset($profileUrl) && !empty($profileUrl)) {
-            $this->user->profileUrl = $profileUrl;
-        }
+        return $mockUser;
     }
 }

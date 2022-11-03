@@ -1,0 +1,17 @@
+[
+    {
+        "displayName": "testGroup",
+        "members": []
+    },
+    {
+        "displayName": "testGroup2",
+        "members": []
+    },
+    {
+        "displayName": "testGroup3",
+        "members": [
+            "12345678-9012-3456-7890-12345678",
+            "87654321-2109-6543-0987-87654321"
+        ]
+    }
+]

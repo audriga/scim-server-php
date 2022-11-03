@@ -2,11 +2,20 @@
 
 namespace Opf\Util;
 
+use Opf\Models\SCIM\Standard\Service\CoreResourceType;
+use Opf\Models\SCIM\Standard\Service\CoreSchemaExtension;
+use Exception;
+use PDO;
+
 abstract class Util
 {
+    private static string $defaultConfigFilePath = __DIR__ . '/../../config/config.default.php';
+    private static string $customConfigFilePath;
+
     public const USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User";
     public const ENTERPRISE_USER_SCHEMA = "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User";
-    public const PROVISIONING_USER_SCHEMA = "urn:audriga:params:scim:schemas:extension:provisioning:2.0:User";
+    public const PROVISIONING_USER_SCHEMA = "urn:ietf:params:scim:schemas:extension:audriga:provisioning:2.0:User";
+    public const DOMAIN_SCHEMA = "urn:ietf:params:scim:schemas:audriga:2.0:Domain";
     public const GROUP_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:Group";
     public const RESOURCE_TYPE_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:ResourceType";
     public const SERVICE_PROVIDER_CONFIGURATION_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:ServiceProviderConfig";
@@ -104,12 +113,20 @@ abstract class Util
                     isset($config['db']['driver']) && !empty($config['db']['driver'])
                     && isset($config['db']['host']) && !empty($config['db']['host'])
                     && isset($config['db']['port']) && !empty($config['db']['port'])
-                    && isset($config['db']['database']) && !empty($config['db']['database'])
+                    && isset($config['db']['database']) && !empty($config['db']['database']
+                    && strcmp($config['db']['driver'], 'mysql') === 0)
                 ) {
                     return $config['db']['driver'] . ':host='
                          . $config['db']['host'] . ';port='
                          . $config['db']['port'] . ';dbname='
                          . $config['db']['database'];
+                } elseif (
+                    isset($config['db']['driver']) && !empty($config['db']['driver'])
+                    && isset($config['db']['databaseFile']) && !empty($config['db']['databaseFile']
+                    && strcmp($config['db']['driver'], 'sqlite') === 0)
+                ) {
+                    return $config['db']['driver'] . ':host='
+                        . '../../' . $config['db']['databaseFile'];
                 }
             }
         }
@@ -117,6 +134,55 @@ abstract class Util
         // In case we can't build a DSN, just return null
         // Note: make sure to check for null equality in the caller
         return null;
+    }
+
+    /**
+     * Utility method for providing a DB connection via PDO
+     *
+     * @throws Exception if there was an issue with obtaining the DB connection
+     * @return PDO A PDO object representing the DB connection
+     */
+    public static function getDbConnection()
+    {
+        // Try to obtain a DSN and complain with an Exception if there's no DSN
+        $dsn = self::buildDbDsn();
+        if (!isset($dsn)) {
+            throw new Exception("Can't obtain DSN to connect to DB");
+        }
+
+        $config = self::getConfigFile();
+        if (isset($config) && !empty($config)) {
+            if (isset($config['db']) && !empty($config['db'])) {
+                if (
+                    isset($config['db']['user'])
+                    && !empty($config['db']['user'])
+                    && isset($config['db']['password'])
+                    && !empty($config['db']['password'])
+                ) {
+                    $dbUsername = $config['db']['user'];
+                    $dbPassword = $config['db']['password'];
+                } else {
+                    // If no DB username and/or password provided, throw an Exception
+                    throw new Exception("No DB username and/or password provided to connect to DB");
+                }
+            }
+        }
+
+        // Create the DB connection with PDO
+        try {
+            $dbConnection = new PDO($dsn, $dbUsername, $dbPassword);
+        } catch (Exception $e) {
+            throw $e;
+        }
+
+        // Tell PDO explicitly to throw exceptions on errors, so as to have more info when debugging DB operations
+        if (isset($config['isInProduction'])) {
+            if ($config['isInProduction'] === false) {
+                $dbConnection->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+            }
+        }
+
+        return $dbConnection;
     }
 
     public static function getDomainFromEmail($email)
@@ -146,18 +212,147 @@ abstract class Util
      */
     public static function getConfigFile()
     {
-        $defaultConfigFilePath = dirname(__DIR__) . '/../config/config.default.php';
-        $customConfigFilePath = dirname(__DIR__) . '/../config/config.php';
-
         $config = [];
 
         // In case we don't have a custom config, we just rely on the default one
-        if (!file_exists($customConfigFilePath)) {
-            $config = require($defaultConfigFilePath);
+        if (!file_exists(self::$customConfigFilePath)) {
+            $config = require(self::$defaultConfigFilePath);
         } else {
-            $config = require($customConfigFilePath);
+            $config = require(self::$customConfigFilePath);
         }
 
         return $config;
+    }
+
+    public static function setConfigFile(string $configFilePath)
+    {
+        self::$customConfigFilePath = $configFilePath;
+    }
+
+    /**
+     * A utility method for obtaining the supported SCIM resource types
+     *
+     * @param string $baseUrl A base URL required for each resource type that is returned
+     *
+     * @return array The array containing the resource types
+     */
+    public static function getResourceTypes($baseUrl)
+    {
+        // Check which resource types are supported via the config file and in this method further down below
+        // make sure to only return those that are indeed supported
+        $config = Util::getConfigFile();
+        $supportedResourceTypes = $config['supportedResourceTypes'];
+
+        $scimResourceTypes = [];
+
+        if (in_array('User', $supportedResourceTypes)) {
+            $userResourceType = new CoreResourceType();
+            $userResourceType->setId("User");
+            $userResourceType->setName("User");
+            $userResourceType->setEndpoint("/Users");
+            $userResourceType->setDescription("User Account");
+            $userResourceType->setSchema(Util::USER_SCHEMA);
+
+            if (in_array('EnterpriseUser', $supportedResourceTypes)) {
+                $enterpriseUserSchemaExtension = new CoreSchemaExtension();
+                $enterpriseUserSchemaExtension->setSchema(Util::ENTERPRISE_USER_SCHEMA);
+                $enterpriseUserSchemaExtension->setRequired(true);
+
+                $userResourceType->setSchemaExtensions(array($enterpriseUserSchemaExtension));
+            }
+            if (in_array('ProvisioningUser', $supportedResourceTypes)) {
+                $provisioningUserSchemaExtension = new CoreSchemaExtension();
+                $provisioningUserSchemaExtension->setSchema(Util::PROVISIONING_USER_SCHEMA);
+                $provisioningUserSchemaExtension->setRequired(true);
+
+                $userResourceType->setSchemaExtensions(array($provisioningUserSchemaExtension));
+            }
+
+            $scimResourceTypes[] = $userResourceType->toSCIM(false, $baseUrl);
+        }
+
+        if (in_array('Group', $supportedResourceTypes)) {
+            $groupResourceType = new CoreResourceType();
+            $groupResourceType->setId("Group");
+            $groupResourceType->setName("Group");
+            $groupResourceType->setEndpoint("/Groups");
+            $groupResourceType->setDescription("Group");
+            $groupResourceType->setSchema("urn:ietf:params:scim:schemas:core:2.0:Group");
+            $groupResourceType->setSchemaExtensions([]);
+
+            $scimResourceTypes[] = $groupResourceType->toSCIM(false, $baseUrl);
+        }
+
+        if (in_array('Domain', $supportedResourceTypes)) {
+            $domainResourceType = new CoreResourceType();
+            $domainResourceType->setId("Domain");
+            $domainResourceType->setName("Domain");
+            $domainResourceType->setEndpoint("/Domains");
+            $domainResourceType->setDescription("Domain");
+            $domainResourceType->setSchema(self::DOMAIN_SCHEMA);
+            $domainResourceType->setSchemaExtensions([]);
+
+            $scimResourceTypes[] = $domainResourceType->toSCIM(false, $baseUrl);
+        }
+
+        return $scimResourceTypes;
+    }
+
+    /**
+     * A utility method for obtaining the configured SCIM schemas
+     *
+     * @return array|null Return an array of schemas or null if no schemas were found
+     */
+    public static function getSchemas()
+    {
+        $config = Util::getConfigFile();
+        $supportedSchemas = $config['supportedResourceTypes'];
+        $mandatorySchemas = ['Schema', 'ResourceType'];
+
+        $scimSchemas = [];
+
+        // We store the schemas that the SCIM server supports in separate JSON files
+        // That's why we try to read them here and add them to $scimSchemas, which is returned as a result
+        $pathToSchemasDir = dirname(__DIR__, 2) . '/config/Schema';
+        $schemaFiles = scandir($pathToSchemasDir, SCANDIR_SORT_NONE);
+
+        // If scandir() failed (i.e., it returned false), then return null
+        if ($schemaFiles === false) {
+            return null;
+        }
+
+        foreach ($schemaFiles as $schemaFile) {
+            if (!in_array($schemaFile, array('.', '..'))) {
+                $scimSchemaJsonDecoded = json_decode(file_get_contents($pathToSchemasDir . '/' . $schemaFile), true);
+
+                // Only return schemas that are either mandatory (like the 'Schema' and 'ResourceType' ones)
+                // or supported by the server
+                if (in_array($scimSchemaJsonDecoded['name'], array_merge($supportedSchemas, $mandatorySchemas))) {
+                    $scimSchemas[] = $scimSchemaJsonDecoded;
+                }
+            }
+        }
+
+        return $scimSchemas;
+    }
+
+    /**
+     * A utility method for obtaining the SCIM service provider configuration
+     *
+     * @return string|null Return the service provider configuration or null if no config was found
+     */
+    public static function getServiceProviderConfig()
+    {
+        $pathToServiceProviderConfigurationFile =
+            dirname(__DIR__, 2) . '/config/ServiceProviderConfig/serviceProviderConfig.json';
+
+        $scimServiceProviderConfigurationFile = file_get_contents($pathToServiceProviderConfigurationFile);
+
+        // If there was no service provider config JSON file found, then return null
+        if ($scimServiceProviderConfigurationFile === false) {
+            return null;
+        }
+
+        return $scimServiceProviderConfigurationFile;
     }
 }

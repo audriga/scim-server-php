@@ -1,6 +1,6 @@
 {
-    "name": "audriga/scim-opf",
-    "description": "An open provisioning framework using the SCIM protocol",
+    "name": "audriga/scim-server-php",
+    "description": "An open library for SCIM servers implementation",
     "type": "library",
     "require": {
         "slim/slim": "^4.10",
@@ -20,8 +20,8 @@
     },
     "authors": [
         {
-            "name": "Stanimir Bozhilov",
-            "email": "stanimir@audriga.com"
+            "name": "audriga",
+            "email": "opensource@audriga.com"
         }
     ],
     "require-dev": {

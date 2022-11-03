@@ -69,6 +69,7 @@ class HttpErrorHandler extends ErrorHandler
         $payload = json_encode($error, JSON_PRETTY_PRINT);
 
         $response = $this->responseFactory->createResponse($statusCode);
+        $response = $response->withHeader('Content-Type', 'application/scim+json');
         $response->getBody()->write($payload);
 
         return $response;

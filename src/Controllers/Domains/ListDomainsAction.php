@@ -1,6 +1,6 @@
 <?php
 
-namespace Opf\Controllers\Groups;
+namespace Opf\Controllers\Domains;
 
 use Opf\Controllers\Controller;
 use Opf\Models\SCIM\Standard\CoreCollection;
@@ -9,17 +9,17 @@ use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
 use Slim\Psr7\Response;
 
-final class ListGroupsAction extends Controller
+final class ListDomainsAction extends Controller
 {
     public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
-        $this->repository = $this->container->get('GroupsRepository');
+        $this->repository = $this->container->get('DomainsRepository');
     }
 
     public function __invoke(ServerRequestInterface $request, ResponseInterface $response): ResponseInterface
     {
-        $this->logger->info("GET Groups");
+        $this->logger->info("GET Domains");
         $filter = '';
         if (!empty($request->getQueryParams()['filter'])) {
             $this->logger->info("Filter --> " . $request->getQueryParams()['filter']);
@@ -28,18 +28,18 @@ final class ListGroupsAction extends Controller
         $uri = $request->getUri();
         $baseUrl = sprintf('%s://%s', $uri->getScheme(), $uri->getAuthority() . $this->basePath);
 
-        $groups = [];
-        $groups = $this->repository->getAll($filter);
+        $domains = [];
+        $domains = $this->repository->getAll($filter);
 
-        $scimGroups = [];
-        if (!empty($groups)) {
-            foreach ($groups as $group) {
-                $scimGroups[] = $group->toSCIM(false, $baseUrl);
+        $scimDomains = [];
+        if (!empty($domains)) {
+            foreach ($domains as $domain) {
+                $scimDomains[] = $domain->toSCIM(false, $baseUrl);
             }
         }
-        $scimGroupCollection = (new CoreCollection($scimGroups))->toSCIM(false);
+        $scimDomainCollection = (new CoreCollection($scimDomains))->toSCIM(false);
 
-        $responseBody = json_encode($scimGroupCollection, JSON_UNESCAPED_SLASHES);
+        $responseBody = json_encode($scimDomainCollection, JSON_UNESCAPED_SLASHES);
         $this->logger->info($responseBody);
         $response = new Response($status = 200);
         $response->getBody()->write($responseBody);

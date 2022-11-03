@@ -1,10 +1,44 @@
 {
 	"info": {
-		"_postman_id": "73043646-f766-4adc-96ee-05316cc59bdd",
+		"_postman_id": "c90f5107-b2fb-46dc-9a32-b07f5ff68440",
 		"name": "SCIM PHP Collection",
 		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
 	},
 	"item": [
+		{
+			"name": "JWT",
+			"item": [
+				{
+					"name": "Get JWT",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"const response = pm.response.json();",
+									"pm.environment.set(\"jwt_token\", response.Bearer)"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/jwt",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"jwt"
+							]
+						}
+					},
+					"response": []
+				}
+			]
+		},
 		{
 			"name": "Users",
 			"item": [
@@ -138,7 +172,8 @@
 									"});",
 									"",
 									"pm.test(\"Response body contains user with userName \\\"createdtestuser\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[0].userName).to.eql(\"createdtestuser\");",
+									"    var resources = pm.response.json().Resources.map(x => x.userName);",
+									"    pm.expect(resources).to.contain(\"createdtestuser\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -155,6 +190,154 @@
 							],
 							"path": [
 								"Users"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter users by userName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains user with userName \\\"createdtestuser\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[0].userName).to.eql(\"createdtestuser\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains a valid non-null user ID\", () => {",
+									"    pm.expect(pm.response.json().id).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Users?filter=userName%20eq%20createdtestuser",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "userName%20eq%20createdtestuser"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter users with invalid filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 500\", () => {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains error '\\\"pr\\\" filter operator must be used without a comparison value'\", () => {",
+									"    pm.expect(pm.response.json().error.description).to.eql(\"\\\"pr\\\" filter operator must be used without a comparison value\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Users?filter=userName%20pr%20createdtestuser",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "userName%20pr%20createdtestuser"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter users with unmatching filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains no users\", () => {",
+									"    pm.expect(pm.response.json().Resources).to.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Users?filter=userName%20sw%20somenonexistentstring",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Users"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "userName%20sw%20somenonexistentstring"
+								}
 							]
 						}
 					},
@@ -403,7 +586,8 @@
 									"});",
 									"",
 									"pm.test(\"Response body contains group with displayName \\\"createdtestgroup\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[0].displayName).to.eql(\"createdtestgroup\");",
+									"    var resources = pm.response.json().Resources.map(x => x.displayName);",
+									"    pm.expect(resources).to.contain(\"createdtestgroup\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -420,6 +604,154 @@
 							],
 							"path": [
 								"Groups"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter groups by displayName",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains group with displayName \\\"createdtestgroup\\\"\", () => {",
+									"    pm.expect(pm.response.json().Resources[0].displayName).to.eql(\"createdtestgroup\");",
+									"});",
+									"",
+									"pm.test(\"Response body contains a valid non-null group ID\", () => {",
+									"    pm.expect(pm.response.json().id).to.not.be.null;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Groups?filter=displayName%20eq%20createdtestgroup",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Groups"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "displayName%20eq%20createdtestgroup"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter groups with invalid filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 500\", () => {",
+									"    pm.response.to.have.status(500);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains error '\\\"pr\\\" filter operator must be used without a comparison value'\", () => {",
+									"    pm.expect(pm.response.json().error.description).to.eql(\"\\\"pr\\\" filter operator must be used without a comparison value\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Groups?filter=displayName%20pr%20createdtestgroup",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Groups"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "displayName%20pr%20createdtestgroup"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Filter groups with unmatching filter",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Response status code is 200\", () => {",
+									"    pm.response.to.have.status(200);",
+									"});",
+									"",
+									"pm.test(\"Content-Type header is application/scim+json\", () => {",
+									"    pm.expect(pm.response.headers.get('Content-Type')).to.eql('application/scim+json');",
+									"});",
+									"",
+									"pm.test(\"Response body is not empty\", () => {",
+									"    pm.expect(pm.response.json()).to.not.be.empty;",
+									"});",
+									"",
+									"pm.test(\"Response body contains no groups\", () => {",
+									"    pm.expect(pm.response.json().Resources).to.be.empty;",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{url}}/Groups?filter=displayName%20sw%20somenonexistentstring",
+							"host": [
+								"{{url}}"
+							],
+							"path": [
+								"Groups"
+							],
+							"query": [
+								{
+									"key": "filter",
+									"value": "displayName%20sw%20somenonexistentstring"
+								}
 							]
 						}
 					},
@@ -579,6 +911,8 @@
 							"listen": "test",
 							"script": {
 								"exec": [
+									"jsonData = pm.response.json();",
+									"",
 									"pm.test(\"Response status code is 200\", () => {",
 									"    pm.response.to.have.status(200);",
 									"});",
@@ -588,31 +922,30 @@
 									"});",
 									"",
 									"pm.test(\"Response body is not empty\", () => {",
-									"    pm.expect(pm.response.json().Resources).to.not.be.empty;",
+									"    pm.expect(jsonData.Resources).to.not.be.empty;",
 									"});",
 									"",
-									"pm.test(\"Response body contains exactly five entries\", () => {",
-									"    pm.expect(pm.response.json().Resources.length).to.eql(5);",
+									"pm.test(\"Response body contains exactly four entries\", () => {",
+									"    pm.expect(jsonData.Resources.length).to.eql(4);",
 									"});",
 									"",
 									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:Group\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[0].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:Group\");",
+									"    isContained = jsonData.Resources.some((resource) => resource.id === \"urn:ietf:params:scim:schemas:core:2.0:Group\");",
+									"    pm.expect(isContained).to.be.true;",
 									"});",
 									"",
 									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:ResourceType\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[1].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:ResourceType\");",
+									"    isContained = jsonData.Resources.some((resource) => resource.id === \"urn:ietf:params:scim:schemas:core:2.0:ResourceType\");",
+									"    pm.expect(isContained).to.be.true;",
 									"});",
 									"",
 									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:Schema\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[2].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:Schema\");",
+									"    isContained = jsonData.Resources.some((resource) => resource.id === \"urn:ietf:params:scim:schemas:core:2.0:Schema\");",
+									"    pm.expect(isContained).to.be.true;",
 									"});",
 									"",
 									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:core:2.0:User\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[3].id).to.eql(\"urn:ietf:params:scim:schemas:core:2.0:User\");",
-									"});",
-									"",
-									"pm.test(\"Response body contains Schema with id \\\"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\\\"\", () => {",
-									"    pm.expect(pm.response.json().Resources[4].id).to.eql(\"urn:ietf:params:scim:schemas:extension:enterprise:2.0:User\");",
+									"    isContained = jsonData.Resources.some((resource) => resource.id === \"urn:ietf:params:scim:schemas:core:2.0:User\");",
 									"});"
 								],
 								"type": "text/javascript"
@@ -684,6 +1017,16 @@
 			]
 		}
 	],
+	"auth": {
+		"type": "bearer",
+		"bearer": [
+			{
+				"key": "token",
+				"value": "{{jwt_token}}",
+				"type": "string"
+			}
+		]
+	},
 	"event": [
 		{
 			"listen": "prerequest",

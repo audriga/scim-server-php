@@ -2,136 +2,106 @@
 
 namespace Opf\Repositories\Groups;
 
+use Monolog\Logger;
 use Opf\Models\SCIM\Standard\Groups\CoreGroup;
 use Opf\Models\SCIM\Standard\Meta;
 use Opf\Repositories\Repository;
+use Opf\Util\Filters\FilterUtil;
 use Psr\Container\ContainerInterface;
 
 class MockGroupsRepository extends Repository
 {
+    private $logger;
+
     public function __construct(ContainerInterface $container)
     {
         parent::__construct($container);
         $this->dataAccess = $this->container->get('GroupsDataAccess');
         $this->adapter = $this->container->get('GroupsAdapter');
+        $this->logger = $this->container->get(Logger::class);
     }
 
-    public function getAll(): array
-    {
+    public function getAll(
+        $filter = '',
+        $startIndex = 0,
+        $count = 0,
+        $attributes = [],
+        $excludedAttributes = []
+    ): array {
         // Read all mock groups from the database
-        $mockGroups = $this->dataAccess::all();
+        $mockGroups = $this->dataAccess->getAll();
         $scimGroups = [];
 
-        // Transform each mock group to a SCIM group via the injected adapter
         foreach ($mockGroups as $mockGroup) {
-            $this->adapter->setGroup($mockGroup);
-
-            $scimGroup = new CoreGroup();
-            $scimGroup->setId($this->adapter->getId());
-            $scimGroup->setDisplayName($this->adapter->getDisplayName());
-            $scimGroup->setMembers($this->adapter->getMembers());
-
-            $scimGroupMeta = new Meta();
-            $scimGroupMeta->setCreated($this->adapter->getCreatedAt());
-
-            $scimGroup->setMeta($scimGroupMeta);
-
+            $scimGroup = $this->adapter->getCoreGroup($mockGroup);
             $scimGroups[] = $scimGroup;
+        }
+
+        if (isset($filter) && !empty($filter)) {
+            $scimGroupsToFilter = [];
+            foreach ($scimGroups as $scimGroup) {
+                $scimGroupsToFilter[] = $scimGroup->toSCIM(false);
+            }
+
+            $filteredScimData = FilterUtil::performFiltering($filter, $scimGroupsToFilter);
+
+            $scimGroups = [];
+            foreach ($filteredScimData as $filteredScimGroup) {
+                $scimGroup = new CoreGroup();
+                $scimGroup->fromSCIM($filteredScimGroup);
+                $scimGroups[] = $scimGroup;
+            }
+
+            return $scimGroups;
         }
 
         return $scimGroups;
     }
 
-    public function getOneById(string $id): ?CoreGroup
-    {
-        if (isset($id) && !empty($id)) {
-            $mockGroup = $this->dataAccess::find($id);
-
-            if (isset($mockGroup) && !empty($mockGroup)) {
-                $this->adapter->setGroup($mockGroup);
-
-                $scimGroup = new CoreGroup();
-                $scimGroup->setId($this->adapter->getId());
-                $scimGroup->setDisplayName($this->adapter->getDisplayName());
-                $scimGroup->setMembers($this->adapter->getMembers());
-
-                $scimGroupMeta = new Meta();
-                $scimGroupMeta->setCreated($this->adapter->getCreatedAt());
-
-                $scimGroup->setMeta($scimGroupMeta);
-
-                return $scimGroup;
-            } else {
-                return null;
-            }
-        } else {
-            return null;
-        }
+    public function getOneById(
+        string $id,
+        $filter = '',
+        $startIndex = 0,
+        $count = 0,
+        $attributes = [],
+        $excludedAttributes = []
+    ): ?CoreGroup {
+        $mockGroup = $this->dataAccess->getOneById($id);
+        return $this->adapter->getCoreGroup($mockGroup);
     }
 
     public function create($object): ?CoreGroup
     {
-        if (isset($object) && !empty($object)) {
-            $scimGroup = new CoreGroup();
-            $scimGroup->fromSCIM($object);
+        $scimGroupToCreate = new CoreGroup();
+        $scimGroupToCreate->fromSCIM($object);
 
-            $this->adapter->setGroup($this->dataAccess);
+        $mockGroupToCreate = $this->adapter->getMockGroup($scimGroupToCreate);
 
-            $this->adapter->setId($scimGroup->getId());
-            $this->adapter->setDisplayName($scimGroup->getDisplayName());
-            $this->adapter->setMembers($scimGroup->getMembers());
-            $this->adapter->setCreatedAt($scimGroup->getMeta()->getCreated());
+        $mockGroupCreated = $this->dataAccess->create($mockGroupToCreate);
 
-            $this->dataAccess = $this->adapter->getGroup();
-            if ($this->dataAccess->save()) {
-                return $scimGroup;
-            } else {
-                return null;
-            }
+        if (isset($mockGroupCreated)) {
+            return $this->adapter->getCoreGroup($mockGroupCreated);
         }
+        return null;
     }
 
     public function update(string $id, $object): ?CoreGroup
     {
-        if (isset($id) && !empty($id)) {
-            $mockGroup = $this->dataAccess::find($id);
-            if (isset($mockGroup) && !empty($mockGroup)) {
-                $scimGroup = new CoreGroup();
-                $scimGroup->fromSCIM($object);
+        $scimGroupToUpdate = new CoreGroup();
+        $scimGroupToUpdate->fromSCIM($object);
 
-                $this->adapter->setGroup($mockGroup);
+        $mockGroupToUpdate = $this->adapter->getMockGroup($scimGroupToUpdate);
 
-                $scimGroup->setId($this->adapter->getId());
+        $mockGroupUpdated = $this->dataAccess->update($id, $mockGroupToUpdate);
 
-                $this->adapter->setDisplayName($scimGroup->getDisplayName());
-                $this->adapter->setMembers($scimGroup->getMembers());
-                $this->adapter->setCreatedAt($scimGroup->getMeta()->getCreated());
-
-                $mockGroup = $this->adapter->getGroup();
-                if ($mockGroup->save()) {
-                    return $scimGroup;
-                } else {
-                    return null;
-                }
-            } else {
-                return null;
-            }
-        } else {
-            return null;
+        if (isset($mockGroupUpdated)) {
+            return $this->adapter->getCoreGroup($mockGroupUpdated);
         }
+        return null;
     }
 
     public function delete(string $id): bool
     {
-        if (isset($id) && !empty($id)) {
-            $mockGroup = $this->dataAccess::find($id);
-            if (!isset($mockGroup) || empty($mockGroup)) {
-                return false;
-            }
-            $mockGroup->delete();
-            return true;
-        } else {
-            return false;
-        }
+        return $this->dataAccess->delete($id);
     }
 }
