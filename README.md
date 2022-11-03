@@ -41,7 +41,7 @@ The **scim-server-php** project currently includes the following:
 ## Related projects
 
 * A [Postfix Admin](https://github.com/postfixadmin/postfixadmin) SCIM API based on **scim-server-php** is available at https://github.com/audriga/postfixadmin-scim-api
-* The [Nextcloud SCIM](https://lab.libreho.st/libre.sh/scim/scimserviceprovider) application provides a SCIM API to [NextCloud](https://nextcloud.com/) and uses **scim-server-php** for its SCIM resource models
+* The [Nextcloud SCIM](https://lab.libreho.st/libre.sh/scim/scimserviceprovider) application provides a SCIM API to [Nextcloud](https://nextcloud.com/) and uses **scim-server-php** for its SCIM resource models
 
 ## Capabilities
 
