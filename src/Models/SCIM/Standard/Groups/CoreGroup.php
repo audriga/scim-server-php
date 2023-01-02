@@ -62,7 +62,9 @@ class CoreGroup extends CommonEntity
             $members = [];
             foreach ($data['members'] as $member) {
                 $scimMember = new MultiValuedAttribute();
-                $scimMember->setValue($member);
+                $scimMember->setValue($member['value']);
+                $scimMember->setDisplay($member['display']);
+                $scimMember->setRef($member['$ref']);
                 $members[] = $scimMember;
             }
             $this->setMembers($members);

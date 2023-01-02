@@ -15,5 +15,10 @@
         "userName": "testuser3",
         "externalId": "testuser3external",
         "profileUrl": "http://example.com/testuser3"
+    },
+    {
+        "userName": "some user",
+        "externalId": "testsome_userexternal",
+        "profileUrl": "http://example.com/some_user"
     }
 ]

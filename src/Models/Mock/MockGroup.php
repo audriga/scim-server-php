@@ -7,7 +7,7 @@ class MockGroup extends MockCommonEntity
     /** @var string|null $displayName */
     private $displayName;
 
-    /** @var array<string>|null $members */
+    /** @var \Opf\Models\SCIM\MultiValuedAttribute|null $members */
     private $members;
 
     public function mapFromArray($properties = null): bool
@@ -36,7 +36,8 @@ class MockGroup extends MockCommonEntity
                 }
 
                 if (strcasecmp($key, 'members') === 0) {
-                    $this->members = $value;
+                    // the members array is stored as a serialized array in the DB
+                    $this->members = unserialize($value);
                     continue;
                 }
                 $result = false;

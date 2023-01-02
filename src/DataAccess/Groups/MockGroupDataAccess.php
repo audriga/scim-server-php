@@ -109,8 +109,10 @@ class MockGroupDataAccess
                 $insertRes = $insertStatement->execute([
                     $groupToCreate->getId(),
                     $groupToCreate->getDisplayName(),
+                    // we serialize the whole members array and store it as is in the database
+                    // this is relatively dirty, but fine enough for a mock group implementation
                     $groupToCreate->getMembers() !== null && !empty($groupToCreate->getMembers())
-                        ? $groupToCreate->getMembers() : "",
+                        ? serialize($groupToCreate->getMembers()) : "",
                     $dateNow,
                     $dateNow
                 ]);
@@ -149,7 +151,7 @@ class MockGroupDataAccess
                     $query = $query . "members = ?, ";
 
                     // We need to transform the string array of user IDs to a single string
-                    $values[] = implode(",", $groupToUpdate->getMembers());
+                    $values[] = serialize($groupToUpdate->getMembers());
                 }
 
                 if (empty($query)) {

@@ -42,15 +42,32 @@ final class FilterUtilTest extends TestCase
         $filterString = "userName sw testuser";
         $filteredScimUsers = FilterUtil::performFiltering($filterString, $this->scimUsers);
 
-        $this->assertEquals($this->scimUsers, $filteredScimUsers);
+        $this->assertEquals(array_splice($this->scimUsers, 0, 3), $filteredScimUsers);
     }
 
     public function testInvalidFiltering()
     {
         $this->expectException(FilterException::class);
-        $this->expectExceptionMessage("Incorrectly formatted AttributeExpression");
+        $this->expectExceptionMessage("Invalid AttributeOperation passed to AttributeExpression");
         
-        $filterString = "externalId eq some value";
+        $filterString = "externalId bla some value";
         $filteredScimUsers = FilterUtil::performFiltering($filterString, $this->scimUsers);
+    }
+
+    public function testFilteringWithSpaces()
+    {
+        $filterString = "userName eq some user";
+        $filteredScimUsers = FilterUtil::performFiltering($filterString, $this->scimUsers);
+        
+        $this->assertEquals(array($this->scimUsers[3]), $filteredScimUsers);
+    }
+
+    public function testIncorrectPRFilterExpression()
+    {
+        $this->expectException(FilterException::class);
+        $this->expectExceptionMessage("\"pr\" filter operator must be used without a comparison value");
+
+        $filterString = "userName pr \"some blabla\"";
+        $parsedFilterExpression = FilterUtil::performFiltering($filterString, $this->scimUsers);
     }
 }

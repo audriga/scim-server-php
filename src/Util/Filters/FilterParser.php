@@ -2,6 +2,7 @@
 
 namespace Opf\Util\Filters;
 
+use Attribute;
 use Opf\Models\SCIM\Standard\Filters\AttributeExpression;
 use Opf\Models\SCIM\Standard\Filters\FilterException;
 use Opf\Models\SCIM\Standard\Filters\FilterExpression;
@@ -24,16 +25,35 @@ class FilterParser
             );
         }
 
-        $splitFilterExpression = explode(" ", $filterExpression);
-        if (count($splitFilterExpression) < 2 || count($splitFilterExpression) > 3) {
+        $splitAttributePathFromFilterExpression = explode(" ", $filterExpression, 2);
+
+        if (!isset($splitAttributePathFromFilterExpression[1]) || empty($splitAttributePathFromFilterExpression[1])) {
             throw new FilterException("Incorrectly formatted AttributeExpression");
+        } else if (strcmp($splitAttributePathFromFilterExpression[1], "pr") === 0) {
+            $attributeExpression = new AttributeExpression(
+                $splitAttributePathFromFilterExpression[0], // The attribute path
+                "pr",                                       // The comparison operator (which must be "pr" in this case)
+                null                                        // The comparison value (must be null due to "pr")
+            );
+        } else {
+            $splitFilterExpressionWithoutAttributePath = explode(" ", $splitAttributePathFromFilterExpression[1], 2);
+            $attributeExpression = new AttributeExpression(
+                $splitAttributePathFromFilterExpression[0],    // The attribute path
+                $splitFilterExpressionWithoutAttributePath[0], // The comparison operator (which is different from "pr")
+                $splitFilterExpressionWithoutAttributePath[1]  // The comparison value (can contain spaces)
+            );
         }
 
-        $attributeExpression = new AttributeExpression(
-            $splitFilterExpression[0],
-            $splitFilterExpression[1],
-            $splitFilterExpression[2]
-        );
+
+        // if (count($splitFilterExpression) < 2 || count($splitFilterExpression) > 3) {
+        //     throw new FilterException("Incorrectly formatted AttributeExpression");
+        // }
+
+        // $attributeExpression = new AttributeExpression(
+        //     $splitFilterExpression[0],
+        //     $splitFilterExpression[1],
+        //     $splitFilterExpression[2]
+        // );
 
         return $attributeExpression;
     }

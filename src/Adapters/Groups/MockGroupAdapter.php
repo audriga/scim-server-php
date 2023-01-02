@@ -31,7 +31,9 @@ class MockGroupAdapter extends AbstractAdapter
             $coreGroupMembers = [];
             foreach ($mockGroup->getMembers() as $mockGroupMember) {
                 $coreGroupMember = new MultiValuedAttribute();
-                $coreGroupMember->setValue($mockGroupMember);
+                $coreGroupMember->setValue($mockGroupMember->getValue());
+                $coreGroupMember->setDisplay($mockGroupMember->getDisplay());
+                $coreGroupMember->setRef($mockGroupMember->getRef());
                 $coreGroupMembers[] = $coreGroupMember;
             }
 
@@ -60,12 +62,15 @@ class MockGroupAdapter extends AbstractAdapter
         if ($coreGroup->getMembers() !== null && !empty($coreGroup->getMembers())) {
             $mockGroupMembers = [];
             foreach ($coreGroup->getMembers() as $coreGroupMember) {
-                $mockGroupMembers[] = $coreGroupMember->getValue();
+                $mockGroupMember = new MultiValuedAttribute();
+                $mockGroupMember->setValue($coreGroupMember->getValue());
+                $mockGroupMember->setDisplay($coreGroupMember->getDisplay());
+                $mockGroupMember->setRef($coreGroupMember->getRef());
+                $mockGroupMembers[] = $mockGroupMember;
             }
 
             $mockGroup->setMembers($mockGroupMembers);
         }
-
         return $mockGroup;
     }
 }

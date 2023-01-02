@@ -46,12 +46,25 @@ final class FilterParserTest extends TestCase
         $parsedFilterExpression = FilterParser::parseFilterExpression($filterString);
     }
 
-    public function testParseTooLongFilterExpression()
+    public function testFilterExpressionWithSpacesInValue()
+    {
+        $filterString = "userName eq \"some value\"";
+        $parsedFilterExpression = FilterParser::parseFilterExpression($filterString);
+
+        $this->assertInstanceOf(FilterExpression::class, $parsedFilterExpression);
+        $this->assertInstanceOf(AttributeExpression::class, $parsedFilterExpression);
+
+        $this->assertEquals("userName", $parsedFilterExpression->getAttributePath());
+        $this->assertEquals(AttributeOperator::OP_EQ, $parsedFilterExpression->getCompareOperator());
+        $this->assertEquals("\"some value\"", $parsedFilterExpression->getComparisonValue());
+    }
+
+    public function testParseIncorrectExpression()
     {
         $this->expectException(FilterException::class);
-        $this->expectExceptionMessage("Incorrectly formatted AttributeExpression");
+        $this->expectExceptionMessage("Invalid AttributeOperation passed to AttributeExpression");
 
-        $filterString = "userName eq some value";
+        $filterString = "userName blabla \"some moreblabla\"";
         $parsedFilterExpression = FilterParser::parseFilterExpression($filterString);
     }
 }
