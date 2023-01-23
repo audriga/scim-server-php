@@ -7,7 +7,7 @@ if (file_exists(__DIR__ . '/../vendor/autoload.php')) {
     require __DIR__ . '/../../../../vendor/autoload.php';
 }
 
-use Firebase\JWT\JWT;
+use Opf\Vendor\Firebase\JWT\JWT;
 
 /**
  * A function that prints the usage help message to standard output

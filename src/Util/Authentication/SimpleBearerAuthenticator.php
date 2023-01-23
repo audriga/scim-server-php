@@ -3,8 +3,8 @@
 namespace Opf\Util\Authentication;
 
 use Exception;
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use Opf\Vendor\Firebase\JWT\JWT;
+use Opf\Vendor\Firebase\JWT\Key;
 use Opf\Util\Util;
 use Psr\Container\ContainerInterface;
 
