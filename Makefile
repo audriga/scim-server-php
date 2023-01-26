@@ -29,7 +29,7 @@ lint:
 	composer install --prefer-dist
 
 	# Lint with CodeSniffer
-	vendor/bin/phpcs --standard=phpcs.xml src/
+	vendor/bin/phpcs --standard=phpcs.xml src/ --ignore=src/Vendor
 
 .PHONY: api_test
 api_test:

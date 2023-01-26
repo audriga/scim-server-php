@@ -10,7 +10,7 @@ use PDO;
 abstract class Util
 {
     private static string $defaultConfigFilePath = __DIR__ . '/../../config/config.default.php';
-    private static string $customConfigFilePath;
+    private static string $customConfigFilePath = '';
 
     public const USER_SCHEMA = "urn:ietf:params:scim:schemas:core:2.0:User";
     public const ENTERPRISE_USER_SCHEMA = "urn:ietf:params:scim:schemas:extension:enterprise:2.0:User";
@@ -353,6 +353,6 @@ abstract class Util
             return null;
         }
 
-        return $scimServiceProviderConfigurationFile;
+        return json_decode($scimServiceProviderConfigurationFile);
     }
 }

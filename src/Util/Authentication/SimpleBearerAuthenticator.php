@@ -15,7 +15,7 @@ class SimpleBearerAuthenticator implements AuthenticatorInterface
 
     public function __construct(ContainerInterface $container)
     {
-        $this->logger = $container->get(\Monolog\Logger::class);    
+        $this->logger = $container->get(\Monolog\Logger::class);
     }
 
     public function authenticate(string $credentials, array $authorizationInfo): bool

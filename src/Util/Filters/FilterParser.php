@@ -29,7 +29,7 @@ class FilterParser
 
         if (!isset($splitAttributePathFromFilterExpression[1]) || empty($splitAttributePathFromFilterExpression[1])) {
             throw new FilterException("Incorrectly formatted AttributeExpression");
-        } else if (strcmp($splitAttributePathFromFilterExpression[1], "pr") === 0) {
+        } elseif (strcmp($splitAttributePathFromFilterExpression[1], "pr") === 0) {
             $attributeExpression = new AttributeExpression(
                 $splitAttributePathFromFilterExpression[0], // The attribute path
                 "pr",                                       // The comparison operator (which must be "pr" in this case)
