@@ -1,6 +1,6 @@
 <?php
 
-namespace Opf\Vendor\Firebase\JWT;
+namespace Opf\ScimServerPhp\Firebase\JWT;
 
 class ExpiredException extends \UnexpectedValueException
 {

@@ -41,10 +41,10 @@
     },
     "extra": {
         "mozart": {
-            "dep_namespace": "Opf\\Vendor\\",
-            "dep_directory": "/src/Vendor/",
-            "classmap_directory": "/classes/vendor/",
-            "classmap_prefix": "Vendor_",
+            "dep_namespace": "Opf\\ScimServerPhp\\",
+            "dep_directory": "/src/ScimServerPhp/",
+            "classmap_directory": "/classes/scimserverphp/",
+            "classmap_prefix": "ScimServerPhp_",
             "packages": [
                 "firebase/php-jwt"
             ],
